@@ -57,43 +57,78 @@ namespace Main.Controllers
                 return Ok();
             }
         }
-        
+
 
         //命令列處理
         private List<isRock.LineBot.MessageBase> ProcessCommand(isRock.LineBot.Event lineEvent)
         {
             var cmdLine = MergeSpace(lineEvent.message.text);
             var words = cmdLine.ToLower().Replace("/", "").Split(' ').ToList();
-            var id = "";
+            var idOrName = "";
+            var retMessages = new List<isRock.LineBot.MessageBase>();
+
             if (words.Contains("start") && words.Contains("build"))
             {
                 //找出build後面的元素
-                var n = words.FindIndex(c => c == "build");
+                var n = words.FindIndex(c=> c == "build");
                 if (words.Count() >= n)
                 {
-                     id = words[n + 1];
+                    idOrName = words[n + 1];
                 }
             }
 
-            //如果有 id
-            if (!string.IsNullOrEmpty(id))
-            {
-                AzureDevOpsRestApiClient c = new AzureDevOpsRestApiClient(
-                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserName"].ToString(),
-                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserPAT"].ToString(),
-                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsOrganizationName"].ToString(),
-                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsProjectName"].ToString()
-                    );
+            //如果沒有 id, return 
+            if (string.IsNullOrEmpty(idOrName))
+                return null;
 
-                var retMessages = new List<isRock.LineBot.MessageBase>();
-                var ret = c.QueueNewBuild(int.Parse(id));
-                if (ret != null)
-                    retMessages.Add(new isRock.LineBot.TextMessage($"Build {id} 啟動中... \n Build Name : {ret.definition.name} \n Queue ID : {ret.queue.id} \n buildNumber : {ret.buildNumber}"));
+            //如果有 id, 建立 AzureDevOpsRestApiClient
+            AzureDevOpsRestApiClient client = new AzureDevOpsRestApiClient(
+                System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserName"].ToString(),
+                System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserPAT"].ToString(),
+                System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsOrganizationName"].ToString(),
+                System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsProjectName"].ToString()
+                );
+
+            var BuildId = -1;
+            //如果id不是數字
+            if (int.TryParse(idOrName, out BuildId) == false)
+            {
+                //取得id(文字)所對應的build definition 
+                var Definitions = client.GetDefinitions();
+                //如果成功取回Definitions
+                if (Definitions != null && Definitions.count > 0)
+                {
+                    //找對應名稱的 denifition
+                    var Definition = from d in Definitions.value
+                                     where d.name.ToLower() == idOrName.ToLower()
+                                     select d;
+                    if (Definition != null && Definition.Count() >= 1)
+                    {
+                        //如果有找到對應名稱的 denifition
+                        BuildId = Definition.FirstOrDefault().id;
+                    }
+                    else
+                    {
+                        retMessages.Add(new isRock.LineBot.TextMessage($"找不到build {idOrName}"));
+                        return retMessages;
+                    }
+                }
                 else
-                    retMessages.Add(new isRock.LineBot.TextMessage($"Build {id} 啟動失敗..."));
-                return retMessages;
+                {
+                    retMessages.Add(new isRock.LineBot.TextMessage($"找不到build Definitions"));
+                    return retMessages;
+                }
             }
-            return null;
+
+            //如果找不到build
+            if (BuildId <= -1) return null;
+
+            var ret = client.QueueNewBuild(BuildId);
+            if (ret != null)
+                retMessages.Add(new isRock.LineBot.TextMessage($"Build {BuildId} 啟動中... \n Build Name : {ret.definition.name} \n Queue ID : {ret.queue.id} \n buildNumber : {ret.buildNumber}"));
+            else
+                retMessages.Add(new isRock.LineBot.TextMessage($"Build {BuildId} 啟動失敗..."));
+            return retMessages;
         }
 
         private string MergeSpace(string cmd)

@@ -50,7 +50,7 @@ namespace Main
         public GetDefinitionsResult GetDefinitions()
         {
             var ret = AzureDevOpsHttpGet<GetDefinitionsResult>(new Uri(
-                "https://dev.azure.com/{OrganizationName}/{ProjectName}/_apis/build/builds?api-version=5.0"));
+                $"https://dev.azure.com/{OrganizationName}/{ProjectName}/_apis/build/definitions?api-version=5.0"));
 
             return ret;
         }
