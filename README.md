@@ -1,4 +1,4 @@
-AzureDevOpsBot
+LINE Bot for AzureDevOps 
 ===
 
 這個 LINE Bot範例比較特別，<br>
