@@ -16,8 +16,8 @@ AzureDevOpsBot
 這個範例的使用價值可能見仁見智，但範例中包含了一些頗重要的技術，例如 <br>
 1.如何透過Rest API來控制Azure DevOps<br>
 2.如何進行Basic驗證<br>
-3.如何處理command line的bot
-4...其他有空再說
+3.如何處理command line的bot<br>
+4.其他有空再說...
 
 如何使用此專案
 ===
@@ -31,7 +31,7 @@ AzureDevOpsBot
 
 * 建議使用Ngrok進行測試 <br/>
 (可參考 https://youtu.be/kCga1_E-ijs ) 
-* LINE Bot後台的WebHook設定，其位置為 Http://你的domain/api/LineAccountBook
+* LINE Bot後台的WebHook設定，其位置為 Http://你的domain/api/AzureDevOpsBot
 
 資料庫
 ===
@@ -40,6 +40,7 @@ AzureDevOpsBot
 注意事項
 ===
 由於這只是一個範例，我們盡可能用最簡單的方式來開發。 <br/> 
+作者時間很有限，所以請盡量參與開發PR，Code見不平，拔手相助。
 
 相關資源 
 ===
