@@ -13,8 +13,8 @@ namespace Main.Controllers
         [HttpPost]
         public IHttpActionResult POST()
         {
-             string channelAccessToken = System.Configuration.ConfigurationManager.AppSettings["channelAccessToken"].ToString();
-             string AdminUserId = System.Configuration.ConfigurationManager.AppSettings["AdminUserId"].ToString();
+            string channelAccessToken = System.Configuration.ConfigurationManager.AppSettings["channelAccessToken"].ToString();
+            string AdminUserId = System.Configuration.ConfigurationManager.AppSettings["AdminUserId"].ToString();
 
             try
             {
@@ -28,7 +28,21 @@ namespace Main.Controllers
                 if (LineEvent.type == "message")
                 {
                     if (LineEvent.message.type == "text") //收到文字
-                        this.ReplyMessage(LineEvent.replyToken, "你說了:" + LineEvent.message.text);
+                    {
+                        //如果是command line (start with / )
+                        if (LineEvent.message.text.ToLower().StartsWith("/"))
+                        {
+                            //command line processer
+                            var ret = ProcessCommand(LineEvent);
+                            //if got any response message
+                            if (ret != null) this.ReplyMessage(LineEvent.replyToken, ret);
+                        }
+                    }
+                    else
+                    {
+                        //Bot silence
+                        //this.ReplyMessage(LineEvent.replyToken, "你說了:" + LineEvent.message.text);
+                    }
                     if (LineEvent.message.type == "sticker") //收到貼圖
                         this.ReplyMessage(LineEvent.replyToken, 1, 2);
                 }
@@ -42,6 +56,54 @@ namespace Main.Controllers
                 //response OK
                 return Ok();
             }
+        }
+        
+
+        //命令列處理
+        private List<isRock.LineBot.MessageBase> ProcessCommand(isRock.LineBot.Event lineEvent)
+        {
+            var cmdLine = MergeSpace(lineEvent.message.text);
+            var words = cmdLine.ToLower().Replace("/", "").Split(' ').ToList();
+            var id = "";
+            if (words.Contains("start") && words.Contains("build"))
+            {
+                //找出build後面的元素
+                var n = words.FindIndex(c => c == "build");
+                if (words.Count() >= n)
+                {
+                     id = words[n + 1];
+                }
+            }
+
+            //如果有 id
+            if (!string.IsNullOrEmpty(id))
+            {
+                AzureDevOpsRestApiClient c = new AzureDevOpsRestApiClient(
+                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserName"].ToString(),
+                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsUserPAT"].ToString(),
+                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsOrganizationName"].ToString(),
+                    System.Configuration.ConfigurationManager.AppSettings["AzureDevOpsProjectName"].ToString()
+                    );
+
+                var retMessages = new List<isRock.LineBot.MessageBase>();
+                var ret = c.QueueNewBuild(int.Parse(id));
+                if (ret != null)
+                    retMessages.Add(new isRock.LineBot.TextMessage($"Build {id} 啟動中... \n Build Name : {ret.definition.name} \n Queue ID : {ret.queue.id} \n buildNumber : {ret.buildNumber}"));
+                else
+                    retMessages.Add(new isRock.LineBot.TextMessage($"Build {id} 啟動失敗..."));
+                return retMessages;
+            }
+            return null;
+        }
+
+        private string MergeSpace(string cmd)
+        {
+            cmd = cmd.Trim();
+            while (cmd.IndexOf("  ") > 0)
+            {
+                cmd = cmd.Replace("  ", " ");
+            }
+            return cmd;
         }
     }
 }

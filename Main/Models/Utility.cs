@@ -1,5 +1,8 @@
-﻿using System;
+﻿using AzureDevOps;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,7 +31,7 @@ namespace Main
             this.BasicAuthToken = Convert.ToBase64String(bytes);
         }
 
-        public void QueueNewBuild(int id)
+        public QueueBuildResult QueueNewBuild(int id)
         {
             var JSON = @"
 { 
@@ -39,8 +42,10 @@ namespace Main
 ";
 
             JSON = JSON.Replace("{id}", id.ToString());
-            var ret = AzureDevOpsHttpPost<string>(JSON, new Uri(
+            var ret = AzureDevOpsHttpPost<QueueBuildResult>(JSON, new Uri(
                 "https://dev.azure.com/twlab/DevOpsFight2019/_apis/build/builds?api-version=5.0"));
+
+            return ret;
         }
 
 
@@ -56,8 +61,16 @@ namespace Main
                 byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(JsonBody);
                 byte[] result = wc.UploadData(Endpoint, byteArray);
                 var retJSON = System.Text.Encoding.UTF8.GetString(result);
+                if (typeof(T).Equals(typeof(string)))
+                {
+                    TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+                    return (T)converter.ConvertFromString(null, CultureInfo.InvariantCulture, retJSON);
+                }
+                else
+                {
                     var ReturnObject = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(retJSON);
-                return ReturnObject;
+                    return ReturnObject;
+                }
             }
             catch (WebException ex)
             {
