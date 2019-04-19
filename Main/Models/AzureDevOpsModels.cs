@@ -215,4 +215,43 @@ namespace AzureDevOps
         public bool retainedByRelease { get; set; }
         public object triggeredByBuild { get; set; }
     }
+
+    #region "Definitions"
+    public class AuthoredBy
+    {
+        public string displayName { get; set; }
+        public string url { get; set; }
+        public Links2 _links { get; set; }
+        public string id { get; set; }
+        public string uniqueName { get; set; }
+        public string imageUrl { get; set; }
+        public string descriptor { get; set; }
+    }
+
+    public class Value
+    {
+        public Links _links { get; set; }
+        public string quality { get; set; }
+        public AuthoredBy authoredBy { get; set; }
+        public List<object> drafts { get; set; }
+        public Queue queue { get; set; }
+        public int id { get; set; }
+        public string name { get; set; }
+        public string url { get; set; }
+        public string uri { get; set; }
+        public string path { get; set; }
+        public string type { get; set; }
+        public string queueStatus { get; set; }
+        public int revision { get; set; }
+        public DateTime createdDate { get; set; }
+        public Project project { get; set; }
+    }
+
+    public class GetDefinitionsResult
+    {
+        public int count { get; set; }
+        public List<Value> value { get; set; }
+    }
+    #endregion
+
 }
