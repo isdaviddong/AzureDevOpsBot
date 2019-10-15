@@ -1,4 +1,5 @@
-﻿using AzureDevOps;
+﻿ 
+using AzureDevOps.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,6 +52,14 @@ namespace Main
         {
             var ret = AzureDevOpsHttpGet<GetDefinitionsResult>(new Uri(
                 $"https://dev.azure.com/{OrganizationName}/{ProjectName}/_apis/build/definitions?api-version=5.0"));
+
+            return ret;
+        }
+
+        public Approves.GetApproversResult GetApprovers()
+        {
+            var ret = AzureDevOpsHttpGet<Approves.GetApproversResult>(new Uri(
+                $"https://vsrm.dev.azure.com/{OrganizationName}/{ProjectName}/_apis/release/approvals?api-version=5.1"));
 
             return ret;
         }
@@ -118,6 +127,7 @@ namespace Main
                 throw new Exception($"\n AzureDevOpsHttpGet Exception:{ex.Message} \nResponse:{ WebException} \nEndpoint:{Endpoint}", ex);
             }
         }
+
         private static string GetWebException(WebException ex)
         {
             try

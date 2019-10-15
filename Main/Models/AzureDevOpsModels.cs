@@ -3,8 +3,96 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace AzureDevOps
+namespace AzureDevOps.Models
 {
+    public class Approves {
+        public class Avatar
+        {
+            public string href { get; set; }
+        }
+
+        public class Links
+        {
+            public Avatar avatar { get; set; }
+        }
+
+        public class Approver
+        {
+            public string displayName { get; set; }
+            public string url { get; set; }
+            public Links _links { get; set; }
+            public string id { get; set; }
+            public string uniqueName { get; set; }
+            public string imageUrl { get; set; }
+            public string descriptor { get; set; }
+        }
+
+        public class Links2
+        {
+        }
+
+        public class Release
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string url { get; set; }
+            public Links2 _links { get; set; }
+        }
+
+        public class Links3
+        {
+        }
+
+        public class ReleaseDefinition
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string path { get; set; }
+            public object projectReference { get; set; }
+            public string url { get; set; }
+            public Links3 _links { get; set; }
+        }
+
+        public class Links4
+        {
+        }
+
+        public class ReleaseEnvironment
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string url { get; set; }
+            public Links4 _links { get; set; }
+        }
+
+        public class Value
+        {
+            public int id { get; set; }
+            public int revision { get; set; }
+            public Approver approver { get; set; }
+            public string approvalType { get; set; }
+            public DateTime createdOn { get; set; }
+            public DateTime modifiedOn { get; set; }
+            public string status { get; set; }
+            public string comments { get; set; }
+            public bool isAutomated { get; set; }
+            public bool isNotificationOn { get; set; }
+            public int trialNumber { get; set; }
+            public int attempt { get; set; }
+            public int rank { get; set; }
+            public Release release { get; set; }
+            public ReleaseDefinition releaseDefinition { get; set; }
+            public ReleaseEnvironment releaseEnvironment { get; set; }
+            public string url { get; set; }
+        }
+
+        public class GetApproversResult
+        {
+            public int count { get; set; }
+            public List<Value> value { get; set; }
+        }
+    }
+
     public class Self
     {
         public string href { get; set; }
