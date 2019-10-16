@@ -5,6 +5,84 @@ using System.Web;
 
 namespace AzureDevOps.Models
 {
+    public class MakeApprove {
+
+        public class Approver
+        {
+            public string id { get; set; }
+            public string displayName { get; set; }
+            public string uniqueName { get; set; }
+            public string url { get; set; }
+            public string imageUrl { get; set; }
+        }
+
+        public class ApprovedBy
+        {
+            public string id { get; set; }
+            public string displayName { get; set; }
+            public string uniqueName { get; set; }
+            public string url { get; set; }
+            public string imageUrl { get; set; }
+        }
+
+        public class Links
+        {
+        }
+
+        public class Release
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string url { get; set; }
+            public Links _links { get; set; }
+        }
+
+        public class Links2
+        {
+        }
+
+        public class ReleaseDefinition
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string url { get; set; }
+            public Links2 _links { get; set; }
+        }
+
+        public class Links3
+        {
+        }
+
+        public class ReleaseEnvironment
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public Links3 _links { get; set; }
+        }
+
+        public class MakeApproveResult
+        {
+            public int id { get; set; }
+            public int revision { get; set; }
+            public Approver approver { get; set; }
+            public ApprovedBy approvedBy { get; set; }
+            public string approvalType { get; set; }
+            public DateTime createdOn { get; set; }
+            public DateTime modifiedOn { get; set; }
+            public string status { get; set; }
+            public string comments { get; set; }
+            public bool isAutomated { get; set; }
+            public bool isNotificationOn { get; set; }
+            public int trialNumber { get; set; }
+            public int attempt { get; set; }
+            public int rank { get; set; }
+            public List<object> history { get; set; }
+            public Release release { get; set; }
+            public ReleaseDefinition releaseDefinition { get; set; }
+            public ReleaseEnvironment releaseEnvironment { get; set; }
+            public string url { get; set; }
+        }
+    }
     public class Approves {
         public class Avatar
         {

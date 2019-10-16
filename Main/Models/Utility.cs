@@ -56,6 +56,24 @@ namespace Main
             return ret;
         }
 
+
+        public MakeApprove.MakeApproveResult MakeApprove(int approvalId, string comments)
+        {
+            var JSON = @"
+{
+  ""status"": ""approved"",
+  ""comments"": ""Good to go!""
+}
+";
+
+            //JSON = JSON.Replace("{id}", id.ToString());
+            var ret = AzureDevOpsHttpPatch<MakeApprove.MakeApproveResult>(JSON, new Uri(
+                $"https://vsrm.dev.azure.com/{OrganizationName}/{ProjectName}/_apis/release/approvals/{approvalId}?api-version=5.1"));
+
+            return ret;
+        }
+
+
         public Approves.GetApproversResult GetApprovers()
         {
             var ret = AzureDevOpsHttpGet<Approves.GetApproversResult>(new Uri(
@@ -65,6 +83,38 @@ namespace Main
         }
 
         #region "http utility"
+        public T AzureDevOpsHttpPatch<T>(string JsonBody, Uri Endpoint)
+        {
+            try
+            {
+                //Call API
+                WebClient wc = new WebClient();
+                wc.Headers.Clear();
+                wc.Headers.Add("Content-Type", "application/json");
+                wc.Headers.Add("Authorization", "Basic " + BasicAuthToken);
+                byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(JsonBody);
+                byte[] result = wc.UploadData(Endpoint, "PATCH", byteArray);
+                var retJSON = System.Text.Encoding.UTF8.GetString(result);
+                if (typeof(T).Equals(typeof(string)))
+                {
+                    TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+                    return (T)converter.ConvertFromString(null, CultureInfo.InvariantCulture, retJSON);
+                }
+                else
+                {
+                    var ReturnObject = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(retJSON);
+                    return ReturnObject;
+                }
+            }
+            catch (WebException ex)
+            {
+                //抓取detasils
+                string WebException = GetWebException(ex);
+                //重新丟exception
+                throw new Exception($"\n AzureDevOpsHttpPost Exception:{ex.Message} \nResponse:{ WebException} \nEndpoint:{Endpoint} \nJSON:{JsonBody}", ex);
+            }
+        }
+
         public T AzureDevOpsHttpPost<T>(string JsonBody, Uri Endpoint)
         {
             try

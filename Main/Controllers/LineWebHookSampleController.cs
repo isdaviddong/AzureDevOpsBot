@@ -80,26 +80,21 @@ namespace Main.Controllers
             //如果命令中有 setup
             if (words.Contains("setup") && words[0] == "setup")
             {
-                System.Web.HttpContext.Current.Application["AzureDevOpsOrganizationName"] = words[1];
-                System.Web.HttpContext.Current.Application["AzureDevOpsProjectName"] = words[2];
-                System.Web.HttpContext.Current.Application["AzureDevOpsUserName"] = words[3];
-                System.Web.HttpContext.Current.Application["AzureDevOpsUserPAT"] = words[4];
-
-                //取得資料
-                AzureDevOpsProjectName = System.Web.HttpContext.Current.Application["AzureDevOpsProjectName"].ToString();
-                AzureDevOpsOrganizationName = System.Web.HttpContext.Current.Application["AzureDevOpsOrganizationName"].ToString();
-                AzureDevOpsUserPAT = System.Web.HttpContext.Current.Application["AzureDevOpsUserPAT"].ToString();
-                AzureDevOpsUserName = System.Web.HttpContext.Current.Application["AzureDevOpsUserName"].ToString();
+                //keep data;
+                System.Web.HttpContext.Current.Application[lineEvent.source.userId] =
+                    $"{words[1]},{words[2]},{words[3]},{words[4]}";
+                //System.Web.HttpContext.Current.Application["AzureDevOpsOrganizationName"] = words[1];
+                //System.Web.HttpContext.Current.Application["AzureDevOpsProjectName"] = words[2];
+                //System.Web.HttpContext.Current.Application["AzureDevOpsUserName"] = words[3];
+                //System.Web.HttpContext.Current.Application["AzureDevOpsUserPAT"] = words[4];
 
                 retMessages.Add(new TextMessage("環境參數設定完成!"));
                 return retMessages;
             }
 
+
             //取得環境設定
-            if (System.Web.HttpContext.Current.Application["AzureDevOpsProjectName"] == null ||
-                 System.Web.HttpContext.Current.Application["AzureDevOpsOrganizationName"] == null ||
-                 System.Web.HttpContext.Current.Application["AzureDevOpsUserPAT"] == null ||
-                 System.Web.HttpContext.Current.Application["AzureDevOpsUserName"] == null)
+            if (System.Web.HttpContext.Current.Application[lineEvent.source.userId] == null)
             {
                 //缺資料，要求輸入
                 retMessages.Add(new TextMessage("請先使用 /setup 指令設定環境參數. \n ex. /setup [OrgName] [ProjectName] [UserName] [PAT]"));
@@ -107,11 +102,12 @@ namespace Main.Controllers
             }
             else
             {
+                var para = System.Web.HttpContext.Current.Application[lineEvent.source.userId].ToString().Split(',');
                 //取得資料
-                AzureDevOpsProjectName = System.Web.HttpContext.Current.Application["AzureDevOpsProjectName"].ToString();
-                AzureDevOpsOrganizationName = System.Web.HttpContext.Current.Application["AzureDevOpsOrganizationName"].ToString();
-                AzureDevOpsUserPAT = System.Web.HttpContext.Current.Application["AzureDevOpsUserPAT"].ToString();
-                AzureDevOpsUserName = System.Web.HttpContext.Current.Application["AzureDevOpsUserName"].ToString();
+                AzureDevOpsProjectName = para[1].Trim();
+                AzureDevOpsOrganizationName = para[0].Trim();
+                AzureDevOpsUserPAT = para[3].Trim();
+                AzureDevOpsUserName = para[2].Trim();
             }
 
             if (words.Contains("get") && (words.Contains("approver") || words.Contains("approvers")))
@@ -123,9 +119,7 @@ namespace Main.Controllers
                 if (ret != null)
                 {
                     var ButtonsTemplateMsg = new isRock.LineBot.ButtonsTemplate();
-
-                    var msg = $"共有 {  ret.count} 等待簽核項目...";
-                    retMessages.Add(new isRock.LineBot.TextMessage(msg));
+                    var msg = $"共有 {  ret.count} 個等待簽核項目...";
 
                     ButtonsTemplateMsg.text = msg;
                     ButtonsTemplateMsg.title = "等待簽核項目...";
@@ -133,9 +127,11 @@ namespace Main.Controllers
                     foreach (var item in ret.value)
                     {
                         var action = new isRock.LineBot.MessageAction()
-                        { label = "確定簽核", text = "/Make Approve " + item.id };
+                        { label = $"確定簽核 [編號:{ item.id }]", text = "/Make Approve " + item.id };
                         ButtonsTemplateMsg.actions.Add(action);
+                        msg += $"NO.{ item.id } ";
                     }
+                    retMessages.Add(new isRock.LineBot.TextMessage(msg));
                     retMessages.Add(new isRock.LineBot.TemplateMessage(ButtonsTemplateMsg));
                 }
                 else
@@ -205,6 +201,31 @@ namespace Main.Controllers
                 return retMessages;
             }
 
+            if (words.Contains("make") && words.Contains("approve"))
+            {
+                //找出build後面的元素
+                var n = words.FindIndex(c => c == "approve");
+                if (words.Count() >= n)
+                {
+                    idOrName = words[n + 1];
+                }
+
+                //如果沒有 id, return 
+                if (string.IsNullOrEmpty(idOrName))
+                    return null;
+
+                // 建立 AzureDevOpsRestApiClient
+                AzureDevOpsRestApiClient client = new AzureDevOpsRestApiClient(
+                    AzureDevOpsUserName, AzureDevOpsUserPAT, AzureDevOpsOrganizationName, AzureDevOpsProjectName);
+
+
+                var ret = client.MakeApprove(int.Parse(idOrName), "ok");
+
+                retMessages.Add(new isRock.LineBot.TextMessage($"單據編號 : {ret.id} {ret.status}"));
+                return retMessages;
+            }
+
+            //最後沒有任何指令被執行
             if (retMessages.Count <= 0)
             {
                 retMessages.Add(new isRock.LineBot.TextMessage("指令錯誤! 什麼事情都沒發生!"));
