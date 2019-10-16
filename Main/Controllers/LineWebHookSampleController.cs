@@ -110,13 +110,14 @@ namespace Main.Controllers
                 AzureDevOpsUserName = para[2].Trim();
             }
 
+            //取得approvers
             if (words.Contains("get") && (words.Contains("approver") || words.Contains("approvers")))
             {
                 // 建立 AzureDevOpsRestApiClient
                 AzureDevOpsRestApiClient client = new AzureDevOpsRestApiClient(
                     AzureDevOpsUserName, AzureDevOpsUserPAT, AzureDevOpsOrganizationName, AzureDevOpsProjectName);
                 var ret = client.GetApprovers();
-                if (ret != null)
+                if (ret != null & ret.count != 0)
                 {
                     var ButtonsTemplateMsg = new isRock.LineBot.ButtonsTemplate();
                     var msg = $"共有 {  ret.count} 個等待簽核項目...";
@@ -135,7 +136,7 @@ namespace Main.Controllers
                     retMessages.Add(new isRock.LineBot.TemplateMessage(ButtonsTemplateMsg));
                 }
                 else
-                    retMessages.Add(new isRock.LineBot.TextMessage($"找不到簽核項目..."));
+                    retMessages.Add(new isRock.LineBot.TextMessage($"找不到等待簽核的項目..."));
 
                 return retMessages;
             }
