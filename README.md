@@ -2,7 +2,7 @@ LINE Bot for AzureDevOps
 ===
 
 這個 LINE Bot範例比較特別，<br>
-功能是觸發(Queue)一個Azure DevOps的Build <br>
+功能是啟動(Queue)一個Azure DevOps的Build (/start build [編號]), 查詢等待簽核的單據(/get approvers), 對等待簽核的單據進行 )/make approve [編號]) <br>
 舉例來說，當用戶跟bot說 /start build 19 <br>
 它就會幫你啟動一個Azure DevOps中相對應的build的instance <br>
 它能讓你人在外面，就可以遙控bot控制你的DevOps Pipeline
